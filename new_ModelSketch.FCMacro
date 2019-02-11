@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+# coding: utf-8
+# 
+# Macro to create a Sketch directly in an App::Part container called "Model"
+
+App.activeDocument().getObject('Model').newObject( 'Sketcher::SketchObject', 'Sketch_0' )

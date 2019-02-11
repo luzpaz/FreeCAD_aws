@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+# coding: utf-8
+# 
+# Macro to create a Datum LCS directly in an App::Part container called "Model"
+
+from PySide import QtGui
+
+# inpu dialog to ask the user the name of the LCS:
+lcsName = 'LCS_0'
+text,ok = QtGui.QInputDialog.getText(None,'Create new coordinate system','Enter Local Coordinate System name :                              ', text = lcsName)
+
+if ok and text:
+	App.activeDocument().getObject('Model').newObject( 'PartDesign::CoordinateSystem', text )
