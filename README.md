@@ -27,7 +27,7 @@ To actually include some geometry, a body needs to be created, and designed usin
 
 The result is the following:
 
-![](https://github.com/Zolko-123/FreeCAD_aws/blob/master/asm_Bielle_tree_arrows.png)
+![](https://github.com/Zolko-123/FreeCAD_aws/blob/master/Illustrations/asm_Bielle_tree_arrows.png)
 
 * the part 'Bielle' is placed in the assembly by attaching it's LCS_0 to the LCS_0 of the parent assembly. 
 * the part 'Cuve' is placed in the assembly by placing its LCS_0 on the LCS_1 of the part 'Bielle'
@@ -50,11 +50,11 @@ To each part inserted into an assembly is associated an `App::FeaturePython` obj
 
 These constraints are not really constraints in the traditional CAD sense, but since `App::FeaturePython` objects are very versatile, they could be expanded to contain real constraints in some (distant) future.
 
-![](https://github.com/Zolko-123/FreeCAD_aws/blob/master/asm_Bielle_constr_Offset.png)
+![](https://github.com/Zolko-123/FreeCAD_aws/blob/master/Illustrations/asm_Bielle_constr_Offset.png)
 
 _Close look at the fields contained in an _`App::FeaturePython`_ object associated with the part 'Cuve'_
 
-![](https://github.com/Zolko-123/FreeCAD_aws/blob/master/asm_Bielle_demo.png)
+![](https://github.com/Zolko-123/FreeCAD_aws/blob/master/Illustrations/asm_Bielle_demo.png)
 
 _Parameters of the_ `App::Placement` _called 'Offset' allowing relative placement of the link -vs- the attachment LCS_
 
@@ -87,6 +87,9 @@ The basic workflow for creating a part is the following:
 
 The previous method allows to assemble parts within a single level. If you want to assemble an assembly into another assembly... **TBW**
 
-![](https://github.com/Zolko-123/FreeCAD_aws/blob/master/asm_V4_2pistons.gif)
+![](https://github.com/Zolko-123/FreeCAD_aws/blob/master/Illustrations/asm_V4_2pistons.gif)
 
-![](https://github.com/Zolko-123/FreeCAD_aws/blob/master/Lego_House%2BGarden.png)
+![](https://github.com/Zolko-123/FreeCAD_aws/blob/master/Illustrations/Lego_House%2BGarden.png)
+
+
+https://github.com/Zolko-123/FreeCAD_aws/blob/master/Illustrations/Lego_House%2BGarden.png
