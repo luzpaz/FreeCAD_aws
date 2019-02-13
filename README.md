@@ -91,5 +91,3 @@ The previous method allows to assemble parts within a single level. If you want 
 
 ![](https://github.com/Zolko-123/FreeCAD_aws/blob/master/Illustrations/Lego_House%2BGarden.png)
 
-
-https://github.com/Zolko-123/FreeCAD_aws/blob/master/Illustrations/Lego_House%2BGarden.png
