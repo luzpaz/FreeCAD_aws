@@ -1,0 +1,154 @@
+#!/usr/bin/env python
+# coding: utf-8
+# 
+# Macro to create a new App::Link to an external App::Part model 
+
+
+from PySide import QtGui, QtCore
+from LinkLib import *
+
+
+
+
+# construct selection strings
+#partItems = [ '{}#{}'.format(obj.Document.Name,obj.Name) for obj in parts ]
+#item,ok = QtGui.QInputDialog.getItem( None, 'Create link to a Model', 'Select the model to insert :                              ', partItems, editable=False )
+
+class selectModel2Link(QtGui.QDialog):
+	""""""
+	def __init__(self):
+		super(selectModel2Link, self).__init__()
+		
+		# Search for all App::Parts in all open documents
+		self.getAllParts()
+		
+		# Our main window will be a QDialog
+		self.GUIwidget = QtGui.QDialog(self)
+		self.setWindowTitle('Create link to a Model')
+		self.setMinimumSize(400, 500)
+		self.resize(400,500)
+
+		# label
+		self.labelMain = QtGui.QLabel(self)
+		self.labelMain.setText("Select the part to be inserted :")
+		self.labelMain.move(10,20)
+
+		# Create a search filter
+		#self.searchField = QtGui.QLineEdit(self)
+		#self.searchField.setMinimumSize(380, 0)
+		#self.searchField.move(10,10)
+
+		# label
+		self.labelLink = QtGui.QLabel(self)
+		self.labelLink.setText("Name of the link :")
+		self.labelLink.move(10,370)
+
+		# Create a line that will contain the name of the link (in the tree)
+		self.linkNameInput = QtGui.QLineEdit(self)
+		self.linkNameInput.setMinimumSize(380, 0)
+		self.linkNameInput.move(10, 400)
+	
+		# The part list is a QListWidget
+		self.partList = QtGui.QListWidget(self)
+		self.partList.move(10,50)
+		self.partList.setMinimumSize(380, 300)
+		
+		# build the list
+		for part in self.allParts:
+			newItem = QtGui.QListWidgetItem()
+			newItem.setText( part.Document.Name +" -> "+ part.Name )
+			newItem.setIcon(part.ViewObject.Icon)
+			self.partList.addItem(newItem)
+
+		# Cancel button
+		self.CancelButton = QtGui.QPushButton('Cancel', self)
+		self.CancelButton.setAutoDefault(False)
+		self.CancelButton.move(10, 460)
+
+		# create Link button
+		self.createLinkButton = QtGui.QPushButton('Insert part', self)
+		self.createLinkButton.move(285, 460)
+		self.createLinkButton.setDefault(True)
+
+		# Actions
+		self.CancelButton.clicked.connect(self.onCancel)
+		self.createLinkButton.clicked.connect(self.onCreateLink)
+		self.partList.itemClicked.connect( self.onItemClicked)
+
+
+	def getAllParts(self):
+		# get all App::Part from all open documents
+		self.allParts = []
+		for doc in App.listDocuments().values():
+			if doc!=activeDoc:
+				parts = doc.findObjects("App::Part")
+				# there might be more than 1 App::Part per document
+				for obj in parts:
+					self.allParts.append( obj )
+            
+            
+	def onItemClicked( self, item ):
+		for selected in self.partList.selectedIndexes():
+			# get the selected part
+			model = self.allParts[ selected.row() ]
+            # set the text of the link to be made to the document where the part is in
+			self.linkNameInput.setText(model.Document.Name)
+
+
+	def onCancel(self):
+		print "Cancelled"
+		form.close()
+
+
+	def onCreateLink(self):
+		# parse the selected items 
+		# TODO : there should only be 1
+		for selected in self.partList.selectedIndexes():
+			# get the selected part
+			model = self.allParts[ selected.row() ]
+		# get the name of the link (as it will appear in the tree)
+		linkName = self.linkNameInput.text()
+
+		# create the App::Link to the previously selected model
+		activeDoc.getObject('Model').newObject( 'App::Link', linkName ).LinkedObject = model
+		# get the App::Link object itself
+		appLink = activeDoc.getObject( linkName )
+		# create an App::FeaturePython for that object in the Constraints group
+		PyFeatureName = PyFeaturePrefix + linkName
+		activeDoc.getObject('Constraints').newObject( 'App::FeaturePython', PyFeatureName )
+		# get the App::FeaturePython itself
+		PyFeature = activeDoc.getObject( PyFeatureName )
+		# add an App::Placement that will be the osffset between attachment and link LCS
+		# the last 'Placement' means that the property will be placed in that group
+		PyFeature.addProperty( 'App::PropertyPlacement', 'Offset', 'Placement' )
+		# store the name of the part where the link is attached to
+		# the Expression ENgine's syntax is different if we're attached directly to 
+		# the parent assembly or to a sister part
+		PyFeature.addProperty( 'App::PropertyString', 'is_attached_to', 'Placement' )
+		PyFeature.is_attached_to = 'Parent Assembly'
+		# store the name of the linked document (only for information)
+		PyFeature.addProperty( 'App::PropertyString', 'Linked_File', 'Information' )
+		PyFeature.Linked_File = model.Document.Name
+		# where the link is attached to 
+		# TODO : hard-coded, should do proper error checking
+		attPart = PyFeature.is_attached_to
+		attLCS  = 'LCS_0'
+		linkLCS = 'LCS_0'
+		# populate the Expression Engine with this info
+		expr = makeExpressionPart( attPart, attLCS, linkName, linkLCS )
+		# put this expression into the Expression Engine of the link:
+		appLink.setExpression( 'Placement', expr )
+
+		# update the link
+		appLink.recompute()
+
+		# finished
+		self.close()
+
+
+# set the current active document as a global variable
+# to avoid mischief if the user changes GUI window
+activeDoc = App.activeDocument()
+
+form = selectModel2Link()
+form.exec_()
