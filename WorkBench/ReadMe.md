@@ -28,7 +28,9 @@ To actually include some geometry, a body needs to be created, and designed usin
 
 The result is the following:
 
-![](./Resources/media/asm_Bielle_tree_arrows.png)
+![](https://github.com/Zolko-123/FreeCAD_aws/blob/master/WorkBench/Ressources/media/asm_Bielle_tree_arrows.png
+)
+
 
 * the part _Bielle_ is placed in the assembly by attaching it's _LCS_0_ to the _LCS_0_ of the parent assembly. 
 * the part _Cuve_ is placed in the assembly by placing its _LCS_0_ on the _LCS_1_ of the part _Bielle_
