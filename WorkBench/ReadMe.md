@@ -101,7 +101,7 @@ The previous method allows to assemble parts within a single level. If you want 
 
 
 <br/>
-#### Release notes:<br/>
+### Release notes:<br/>
 * 2019.02.18 (version 0.1) : <br/>
 initial release of Assembly 4 WB.
 
