@@ -28,7 +28,7 @@ To actually include some geometry, a body needs to be created, and designed usin
 
 The result is the following:
 
-![](https://github.com/Zolko-123/FreeCAD_aws/blob/master/WorkBench/Ressources/media/asm_Bielle_tree_arrows.png
+![](Ressources/media/asm_Bielle_tree_arrows.png
 )
 
 
