@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+# coding: utf-8
+# 
+# Macro to create a Sketch directly in an App::Part container called "Model"
+
+from PySide import QtGui
+
+# inpu dialog to ask the user the name of the Sketch:
+sketchName = 'Sketch_0'
+text,ok = QtGui.QInputDialog.getText(None,'Create new Sketch in Model','Enter Sketch name :                              ', text = sketchName)
+
+if ok and text:
+	App.activeDocument().getObject('Model').newObject( 'Sketcher::SketchObject', text )
