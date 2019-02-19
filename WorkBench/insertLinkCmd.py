@@ -4,12 +4,13 @@
 # Command template 
 
 from PySide import QtGui, QtCore
+from libAsm4 import *
 import FreeCAD, FreeCADGui, Part, os, math, re
+
 
 __dir__ = os.path.dirname(__file__)
 iconPath = os.path.join( __dir__, 'Resources', 'icons' )
 
-#activeDoc = FreeCAD.activeDocument()
 
 
 """
@@ -20,11 +21,14 @@ iconPath = os.path.join( __dir__, 'Resources', 'icons' )
 class insertLink( QtGui.QDialog ):
 	"My tool object"
 
+	def __init__(self):
+		super(insertLink,self).__init__()
 
+        
 	def GetResources(self):
-		return {"MenuText": "Insert a Link to an external Part",
+		return {"MenuText": "Insert an external Part",
 				"Accel": "Ctrl+L",
-				"ToolTip": "Insert a Link to an external Part",
+				"ToolTip": "Insert an external Part",
 				"Pixmap" : os.path.join( iconPath , 'LinkModel.svg')
 				}
 
@@ -38,15 +42,16 @@ class insertLink( QtGui.QDialog ):
 
 	def Activated(self):
 		# This function is executed when the command is activated
-
-		activeDoc = FreeCAD.ActiveDocument
-
+		
+		# get the current active document to avoid errors if user changes tab
+		self.activeDoc = FreeCAD.activeDocument()
+		
 		# the GUI objects are defined later down
-		self.drawGUI()
-
+		self.drawUI()
+		
 		# Search for all App::Parts in all open documents
 		self.getAllParts()
-
+		
 		# build the list
 		for part in self.allParts:
 			newItem = QtGui.QListWidgetItem()
@@ -60,19 +65,23 @@ class insertLink( QtGui.QDialog ):
     ║     defines the UI, only static elements      ║
     ╚═══════════════════════════════════════════════╝
 	"""
-	def drawGUI(self):
-		print('drawing UI')
-		# Our main window will be a QDialog
-		self.GUIwidget = QtGui.QDialog(self)
-		self.GUIwidget.setWindowTitle('Create link 2 a Model')
-		self.GUIwidget.setMinimumSize(400, 500)
-		self.GUIwidget.resize(400,500)
+	def drawUI(self):
+
+		# Our main window is a QDialog
+		self.setModal(False)
+		# make this dialog stay above the others, always visible
+		self.setWindowFlags( QtCore.Qt.WindowStaysOnTopHint )
+		self.setWindowTitle('Insert a Model')
+		self.setMinimumSize(400, 500)
+		self.resize(400,500)
+		#self.Layout.addWidget(self.GUIwindow)
 
 		# label
 		self.labelMain = QtGui.QLabel(self)
-		self.labelMain.setText("Select the part to be inserted :")
+		self.labelMain.setText("Select Part to be inserted :")
 		self.labelMain.move(10,20)
-
+		#self.Layout.addWidget(self.labelMain)
+		
 		# label
 		self.labelLink = QtGui.QLabel(self)
 		self.labelLink.setText("Enter a Name for the link :\n(Must be unique in the Model tree)")
@@ -103,14 +112,96 @@ class insertLink( QtGui.QDialog ):
 		self.createLinkButton.clicked.connect(self.onCreateLink)
 		self.partList.itemClicked.connect( self.onItemClicked)
 
-		self.GUIwidget.show()
+		# show the UI
+		self.show()
 
 
+
+	"""
+    ╔═══════════════════════════════════════════════╗
+    ║         the real stuff happens here           ║
+    ╚═══════════════════════════════════════════════╝
+	"""
+	def onCreateLink(self):
+		# parse the selected items 
+		# TODO : there should only be 1
+		model = []
+		for selected in self.partList.selectedIndexes():
+			# get the selected part
+			model = self.allParts[ selected.row() ]
+		# get the name of the link (as it should appear in the tree)
+		linkName = self.linkNameInput.text()
+		# only create link if there is a model and a name
+		if model and linkName:
+			# create the App::Link to the previously selected model
+			createdLink = self.activeDoc.getObject('Model').newObject( 'App::Link', linkName )
+			createdLink.LinkedObject = model
+			# because of the unique naming principle of FreeCAD, 
+			# the created object might been assigned a different name
+			linkName = createdLink.Name
+		
+			# create an App::FeaturePython for that object in the Constraints group
+			constrName = constraintPrefix + linkName
+			# if it exists, delete it
+			# TODO : a bit aggressive, no ?
+			if self.activeDoc.getObject('Constraints').getObject( constrName ):
+				self.activeDoc.removeObject( constrName )
+			# create the constraints feature
+			self.activeDoc.getObject('Constraints').newObject( 'App::FeaturePython', constrName )
+			# get the App::FeaturePython itself
+			constrFeature = self.activeDoc.getObject( constrName )
+			# store the name of the linked document (only for information)
+			constrFeature.addProperty( 'App::PropertyString', 'Linked_File' )
+			constrFeature.Linked_File = model.Document.Name
+			# store the name of the App::Link this cosntraint refers-to
+			constrFeature.addProperty( 'App::PropertyString', 'Link_Name' )
+			constrFeature.Link_Name = linkName
+
+			# Store the type of the constraint
+			constrFeature.addProperty( 'App::PropertyString', 'ConstraintType' )
+			constrFeature.ConstraintType = 'AttachmentByLCS'
+
+			# the constraint and how the part is attached with it 
+			# TODO : hard-coded, should do proper error checking
+			attPart = 'Parent Assembly'
+			attLCS  = 'LCS_0'
+			linkLCS = 'LCS_0'
+
+			# populate the App::Link's Expression Engine with this info
+			expr = makeExpressionPart( attPart, attLCS, constrName, linkLCS )
+			# put this expression into the Expression Engine of the link:
+			createdLink.setExpression( 'Placement', expr )
+
+			# add an App::Placement that will be the osffset between attachment and link LCS
+			# the last 'Placement' means that the property will be placed in that group
+			constrFeature.addProperty( 'App::PropertyPlacement', 'AttachmentOffset', 'Attachment' )
+			# store the name of the part where the link is attached to
+			constrFeature.addProperty( 'App::PropertyString', 'AttachedTo', 'Attachment' )
+			constrFeature.AttachedTo = attPart
+			# store the name of the LCS in the assembly where the link is attached to
+			constrFeature.addProperty( 'App::PropertyString', 'AttachmentLCS', 'Attachment' )
+			constrFeature.AttachmentLCS = attLCS
+			# store the name of the LCS in the assembly where the link is attached to
+			constrFeature.addProperty( 'App::PropertyString', 'LinkedPartLCS', 'Attachment' )
+			constrFeature.LinkedPartLCS = linkLCS
+
+			# update the link
+			createdLink.recompute()
+
+		# finished
+		self.close()
+
+
+	"""
+    ╔═══════════════════════════════════════════════╗
+    ║                 some fonctions                ║
+    ╚═══════════════════════════════════════════════╝
+	"""
 	def getAllParts(self):
 		# get all App::Part from all open documents
 		self.allParts = []
 		for doc in FreeCAD.listDocuments().values():
-			if doc != activeDoc:
+			if doc != self.activeDoc:
 				parts = doc.findObjects("App::Part")
 				# there might be more than 1 App::Part per document
 				for obj in parts:
@@ -126,74 +217,10 @@ class insertLink( QtGui.QDialog ):
 
 
 	def onCancel(self):
-		print ("Cancelled")
 		self.close()
 
 
-	def onCreateLink(self):
-		# parse the selected items 
-		# TODO : there should only be 1
-		for selected in self.partList.selectedIndexes():
-			# get the selected part
-			model = self.allParts[ selected.row() ]
-		# get the name of the link (as it should appear in the tree)
-		linkName = self.linkNameInput.text()
-		# create the App::Link to the previously selected model
-		createdLink = activeDoc.getObject('Model').newObject( 'App::Link', linkName )
-		createdLink.LinkedObject = model
-		# because of the unique naming principle of FreeCAD, 
-		# the created object might been assigned a different name
-		linkName = createdLink.Name
-		
-		# create an App::FeaturePython for that object in the Constraints group
-		constrName = PyFeaturePrefix + linkName
-		# if it exists, delete it
-		# TODO : a bit aggressive, no ?
-		if activeDoc.getObject('Constraints').getObject( constrName ):
-			activeDoc.removeObject( constrName )
-		# create the constraints feature
-		activeDoc.getObject('Constraints').newObject( 'App::FeaturePython', constrName )
-		# get the App::FeaturePython itself
-		constrFeature = activeDoc.getObject( constrName )
-		# store the name of the linked document (only for information)
-		constrFeature.addProperty( 'App::PropertyString', 'Linked_File' )
-		constrFeature.Linked_File = model.Document.Name
-		# store the name of the App::Link this cosntraint refers-to
-		constrFeature.addProperty( 'App::PropertyString', 'Link_Name' )
-		constrFeature.Link_Name = linkName
 
-		# the constraint and how the part is attached with it 
-		# TODO : hard-coded, should do proper error checking
-		attPart = 'Parent Assembly'
-		attLCS  = 'LCS_0'
-		linkLCS = 'LCS_0'
-
-		# populate the App::Link's Expression Engine with this info
-		expr = makeExpressionPart( attPart, attLCS, constrName, linkLCS )
-		# put this expression into the Expression Engine of the link:
-		createdLink.setExpression( 'Placement', expr )
-
-		# add an App::Placement that will be the osffset between attachment and link LCS
-		# the last 'Placement' means that the property will be placed in that group
-		constrFeature.addProperty( 'App::PropertyPlacement', 'Offset', 'Placement' )
-		# store the name of the part where the link is attached to
-		constrFeature.addProperty( 'App::PropertyString', 'is_attached_to', 'Placement' )
-		constrFeature.is_attached_to = attPart
-		# store the name of the LCS in the assembly where the link is attached to
-		constrFeature.addProperty( 'App::PropertyString', 'LCS_in_parent', 'Placement' )
-		constrFeature.LCS_in_parent = attLCS
-		# store the name of the LCS in the assembly where the link is attached to
-		constrFeature.addProperty( 'App::PropertyString', 'LCS_in_linkedPart', 'Placement' )
-		constrFeature.LCS_in_linkedPart = linkLCS
-		# store the expression used in the App::Link's ExpressionEngine
-		constrFeature.addProperty( 'App::PropertyString', 'Expression', 'Placement' )
-		constrFeature.Expression = expr
-
-		# update the link
-		createdLink.recompute()
-
-		# finished
-		self.close()
 
 
 FreeCADGui.addCommand( 'insertLinkCmd', insertLink() )

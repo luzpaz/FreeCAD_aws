@@ -28,7 +28,6 @@ asm4wbPath = os.path.dirname( asm4wb_locator.__file__ )
 asm4wb_icons_path = os.path.join( asm4wbPath, 'Resources', 'icons')
 
 global main_Assembly4WB_Icon
-
 main_Assembly4WB_Icon = os.path.join( asm4wb_icons_path , 'Assembly4.svg' )
 
 #def myFunc(string):
@@ -42,8 +41,11 @@ main_Assembly4WB_Icon = os.path.join( asm4wb_icons_path , 'Assembly4.svg' )
 #mw.workbenchActivated.connect(myFunc)
 
 
-####################################################################################
-# Initialize the workbench 
+"""
+    ╔═══════════════════════════════════════════════╗
+    ║            Initialize the workbench           ║
+    ╚═══════════════════════════════════════════════╝
+"""
 class Assembly4_WB(Workbench):
  
 
@@ -55,45 +57,20 @@ class Assembly4_WB(Workbench):
 
     
     def __init__(self):
+        "This function is executed when FreeCAD starts"
         pass
 
 
-    def Initialize(self):
-        "This function is executed when FreeCAD starts"
-        import newModelCmd     # creates a new App::Part container called 'Model'
-        import newSketchCmd    # creates a new Sketch in 'Model'
-        import newLCSCmd       # creates a new LCS in 'Model'
-        import newBodyCmd      # creates a new Body in 'Model
-        import insertLinkCmd   # inserts an App::Link to a 'Model' in another file
-        import placeLinkCmd    # places a linked part by snapping LCS (in the Part and in the Assembly)
-        import placeLCSCmd     # places an LCS relative to an external file (creates a local attached copy)
-        #self.list = ["newModelCmd", "placeLinkCmd", "DynamicDataAddProperty", "DynamicDataRemoveProperty", "DynamicDataImportNamedConstraints","DynamicDataCopyProperty","DynamicDataSettings"] # A list of command names created in the line above
-        self.listCmd =           [ "newModelCmd", "newSketchCmd", "newLCSCmd", "newBodyCmd", "insertLinkCmd", "placeLinkCmd", "placeLCSCmd" ] # A list of command names created in the line above
-        self.itemsMenu =         [ "newModelCmd", "newSketchCmd", "newLCSCmd", "newBodyCmd", "insertLinkCmd", "placeLinkCmd", "placeLCSCmd" ] # A list of command names created in the line above
-        self.itemsToolbar =      [ "newModelCmd", "newSketchCmd", "newLCSCmd", "newBodyCmd", "insertLinkCmd", "placeLinkCmd", "placeLCSCmd" ] # A list of command names created in the line above
-        self.itemsContextMenu =  [ "placeLinkCmd", "placeLCSCmd" ] # A list of command names created in the line above
-        self.appendToolbar("Assembly 4",self.itemsToolbar) # leave settings off toolbar
-        self.appendMenu("&Assembly",self.itemsMenu) # creates a new menu
-        #considered putting the menu inside the Edit menu, but decided against it
-        #self.appendMenu(["&Edit","DynamicData"],self.list) # appends a submenu to an existing menu
+	def Initialize(self):
+		#self.appendMenu(["&Edit","DynamicData"],self.list) # appends a submenu to an existing menu
+		pass
 
 
-    def Activated(self):
-        "This function is executed when the workbench is activated"
-        #global act
-        #act.setVisible(True)
-        return
-
-
-    def Deactivated(self):
-        "This function is executed when the workbench is deactivated"
-        #FreeCAD will hide our menu and toolbar upon exiting the wb, so we setup a singleshot
-        #to unhide them once FreeCAD is finished, 2 seconds later
-        from PySide import QtCore
-        QtCore.QTimer.singleShot(2000, self.showMenu)
-        return 
-
-
+	"""
+    ╔═══════════════════════════════════════════════╗
+    ║                      Menu                     ║
+    ╚═══════════════════════════════════════════════╝
+	"""
     def showMenu(self):
         from PySide import QtGui
         window = QtGui.QApplication.activeWindow()
@@ -109,6 +86,40 @@ class Assembly4_WB(Workbench):
                 bar.setVisible(True)
 
 
+
+	"""
+    ╔═══════════════════════════════════════════════╗
+    ║          Standard necessary functions         ║
+    ╚═══════════════════════════════════════════════╝
+	"""
+    def Activated(self):
+        "This function is executed when the workbench is activated"
+        import newModelCmd     # creates a new App::Part container called 'Model'
+        import newSketchCmd    # creates a new Sketch in 'Model'
+        import newLCSCmd       # creates a new LCS in 'Model'
+        import newBodyCmd      # creates a new Body in 'Model
+        import insertLinkCmd   # inserts an App::Link to a 'Model' in another file
+        import placeLinkCmd    # places a linked part by snapping LCS (in the Part and in the Assembly)
+        import placeLCSCmd     # places an LCS relative to an external file (creates a local attached copy)
+        #self.list = ["newModelCmd", "placeLinkCmd", "DynamicDataAddProperty", "DynamicDataRemoveProperty", "DynamicDataImportNamedConstraints","DynamicDataCopyProperty","DynamicDataSettings"] # A list of command names created in the line above
+        self.listCmd =           [ "newModelCmd", "newSketchCmd", "newLCSCmd", "newBodyCmd", "insertLinkCmd", "placeLinkCmd", "placeLCSCmd" ] # A list of command names created in the line above
+        self.itemsMenu =         [ "newModelCmd", "newSketchCmd", "newLCSCmd", "newBodyCmd", "insertLinkCmd", "placeLinkCmd", "placeLCSCmd" ] # A list of command names created in the line above
+        self.itemsToolbar =      [ "newModelCmd", "newSketchCmd", "newLCSCmd", "newBodyCmd", "insertLinkCmd", "placeLinkCmd", "placeLCSCmd" ] # A list of command names created in the line above
+        self.itemsContextMenu =  [ "placeLinkCmd", "placeLCSCmd" ] # A list of command names created in the line above
+        self.appendToolbar("Assembly 4",self.itemsToolbar) # leave settings off toolbar
+        self.appendMenu("&Assembly",self.itemsMenu) # creates a new menu
+        return
+
+
+    def Deactivated(self):
+        "This function is executed when the workbench is deactivated"
+        #FreeCAD will hide our menu and toolbar upon exiting the wb, so we setup a singleshot
+        #to unhide them once FreeCAD is finished, 2 seconds later
+        from PySide import QtCore
+        QtCore.QTimer.singleShot(2000, self.showMenu)
+        return 
+
+
     def ContextMenu(self, recipient):
         "This is executed whenever the user right-clicks on screen"
         # "recipient" will be either "view" or "tree"
@@ -118,8 +129,10 @@ class Assembly4_WB(Workbench):
     def GetClassName(self): 
         # this function is mandatory if this is a full python workbench
         return "Gui::PythonWorkbench"
-	
-	
+
+
+
+
 wb = Assembly4_WB()
 Gui.addWorkbench(wb)
 

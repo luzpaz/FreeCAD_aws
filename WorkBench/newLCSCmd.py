@@ -35,6 +35,4 @@ class newLCS:
 			FreeCAD.activeDocument().getObject('Model').newObject( 'PartDesign::CoordinateSystem', text )
 
 
-
- 
 FreeCADGui.addCommand( 'newLCSCmd', newLCS() )
