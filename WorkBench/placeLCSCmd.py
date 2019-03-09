@@ -186,7 +186,7 @@ class placeLCS( QtGui.QDialog ):
 
 	"""
     ╔═══════════════════════════════════════════════╗
-    ║   fill the LCS list when chaning the parent   ║
+    ║   fill the LCS list when chaining the parent   ║
     ╚═══════════════════════════════════════════════╝
 	"""
 	def onParentList(self):
@@ -223,7 +223,7 @@ class placeLCS( QtGui.QDialog ):
 	"""
     ╔═══════════════════════════════════════════════╗
     ║  An LCS has been clicked in 1 of the 2 lists  ║
-    ║              We higlight both LCS             ║
+    ║              We highlight both LCS             ║
     ╚═══════════════════════════════════════════════╝
 	"""
 	def onLCSclicked( self ):
