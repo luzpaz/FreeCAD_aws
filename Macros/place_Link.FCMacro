@@ -132,7 +132,7 @@ class placeLinkedModel( QtGui.QDialog ):
 
 	"""
     ╔═══════════════════════════════════════════════╗
-    ║   fill the LCS list when chaining the parent   ║
+    ║   fill the LCS list when chaining the parent  ║
     ╚═══════════════════════════════════════════════╝
 	"""
 	def onParentList(self):
@@ -222,7 +222,7 @@ class placeLinkedModel( QtGui.QDialog ):
 	"""
     ╔═══════════════════════════════════════════════╗
     ║  An LCS has been clicked in 1 of the 2 lists  ║
-    ║              We highlight both LCS             ║
+    ║              We highlight both LCS            ║
     ╚═══════════════════════════════════════════════╝
 	"""
 	def onLCSclicked( self ):
