@@ -194,7 +194,7 @@ class insertLink( QtGui.QDialog ):
 
 	"""
     ╔═══════════════════════════════════════════════╗
-    ║                 some fonctions                ║
+    ║                 some functions                ║
     ╚═══════════════════════════════════════════════╝
 	"""
 	def getAllParts(self):
